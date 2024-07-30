@@ -57,3 +57,18 @@ app.get('/api/list', (req, res) => {
       }
   });
 })
+
+app.post('/api/list/new', (req, res) => {
+  db.run(`
+        INSERT INTO ShoppingList (item, quantity)
+        VALUES (?, ?);
+  `,
+   [req.body.item, req.body.quantity]);
+   ((error, response) => {
+      if (error) {
+        res.status(500).json({ error });
+      } else {
+        res.status(201).json({ response });
+      }
+   })
+})
