@@ -13,8 +13,33 @@ app.use(express.json());
 
 let db = null;
 
-function appStartedCallback() {
+function dbSetup(doInsert) {
+  if (db === null) {
+    return;
+  } 
+
+  db.run(` 
+      CREATE TABLE IF NOT EXISTS ShoppingList (
+          id integer PRIMARY KEY AUTOINCREMENT,
+          item TEXT NOT NULL,
+          quantity INTEGER NOT NULL
+      );  
+  `)
+
+  if (doInsert) {
+    db.run(`
+        INSERT INTO ShoppingList (item, quantity)
+        VALUES ('Eggs', 12),
+               ('Milk', 2); 
+    `);
+  }
+
+}
+
+function appStartedCallback(doInsert) {
   console.log(`App is listening, PORT ${port}`);
+  db = new sqlite3.Database('shoppingList.db');
+  dbSetup(false);
 }
 
 app.listen(port, appStartedCallback);
@@ -24,5 +49,11 @@ app.get('/', (req, res) => {
 })
 
 app.get('/api/list', (req, res) => {
-  db.all('')
+  db.all('SELECT * FROM ShoppingList', (error, rows) => {
+      if (error) {
+        res.status(500).json({ error });
+      } else {
+        res.status(200).json({ rows });
+      }
+  });
 })
